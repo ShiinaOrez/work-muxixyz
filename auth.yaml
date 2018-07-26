@@ -1,0 +1,180 @@
+swagger: "2.0"
+
+info:
+  version: 1.0.0
+  title: Auth
+  description: The Auth Service Of Work-Muxixyz
+
+schemes:
+  - https
+host: work.muxixyz.com
+basePath: /auth
+
+paths:
+  /signup:
+    post:
+      summary: Signup a account.
+      description: Just save a list of user.
+      parameters:
+        - name: POSTdata
+          in: body
+          description: data to fill the segments
+          schema:
+            required:
+              - name
+              - email
+            properties:
+              name:
+                type: string
+              email:
+                type: string
+              avatar:
+                type: string
+              tel:
+                type: string
+              teamID:
+                type: integer
+      responses:
+        200:
+          description: Signup successfully
+        401:
+          description: User already exist
+  /login:
+    post:
+      summary: Login a account
+      description: Get a token formed by user-info
+      parameters:
+        - name: POSTdata
+          in: body
+          description: data to mark who want a token
+          schema:
+            required:
+              - username
+            properties:
+              username:
+                type: string
+      responses:
+        200:
+          description: Return a token
+          schema:
+            required:
+              - token
+            properties:
+              token:
+                type: string
+  /token:
+    post:
+      summary: API for get token
+      description: Use muxi method to make a token
+      parameters:
+        - name: MetaData
+          in: body
+          description: data to make a token
+          schema:
+            required:
+              - username
+              - ddl
+            properties:
+              username:
+                type: string
+              ddl:
+                type: string
+      responses:
+        200:
+          description: Return a token
+          schema:
+            required:
+              - token
+            properties:
+              token:
+                type: string
+  /verify:
+     post:
+      summary: API for verify the token
+      description: verify token out of ddl
+      parameters:
+        - in: header
+          name: token
+          description: token to verify
+          required: true
+          type: string
+        - name: MetaData
+          in: body
+          description: username
+          schema:
+            required:
+              - username
+            properties:
+              username:
+                type: string
+      responses:
+        200:
+          description: OK
+        401:
+          description: FAIL
+  /userlist:
+    get:
+      summary: API for get a user list
+      description: For many of useful api
+      parameters:
+        - in: header
+          name: kind
+          description: divide api into many service
+          required: true
+          type: integer
+        - in: header
+          name: username
+          description: who want user list
+          required: true
+          type: string
+        - in: header
+          name: projectID
+          description: data for kind 1 or 3
+          required: false
+          type: integer
+        - in: header
+          name: teamID
+          description: data for kind 3
+          required: false
+          type: integer
+      responses:
+        200:
+          description: user list
+          schema:
+            type: array
+            items:
+              required:
+                - username
+                - userID
+              properties:
+                username:
+                  type: string
+                userID:
+                  type: integer
+  /addAdmin:
+    post:
+      parameters:
+        - in: header
+          name: token
+          description: token to verify
+          required: true
+          type: string
+        - name: POSTdata
+          in: body
+          description: who are the lucky dog
+          schema:
+            required:
+              - superuser
+              - luckydog
+            properties:
+              superuser:
+                type: string
+              luckydog:
+                type: string
+      responses:
+        200:
+          description: luckydog be a admin
+        407:
+          description: ddl
+        408:
+          description: auth fail

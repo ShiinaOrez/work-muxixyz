@@ -1,0 +1,79 @@
+swagger: "2.0"
+
+info:
+  version: 1.0.0
+  title: Comment
+  description: The Comment Service Of Work-Muxixyz
+
+schemes:
+  - https
+host: work.muxixyz.com
+basePath: /comment
+
+tags:
+- name: "auth"
+  description: 验证权限
+- name: "customer"
+  description: 消费者界面
+- name: "chat"
+  description: 群聊界面
+
+paths:
+
+  /new/:
+     post:
+        tags:
+        - "auth"
+        summary: post a new comment
+        description: post all kinds of comment
+        parameters:
+          - name: POSTdata
+            in: body
+            schema:
+              required:
+                - username
+                - kind
+                - content
+                - sourceID
+              properties:
+                username:
+                  type: string
+                kind:
+                  type: integer
+                content:
+                  type: string
+                sourceID:
+                  type: integer
+        responses:
+          200:
+            description: comment successfully
+  /commentList/:
+    get:
+      tags:
+      - "auth"
+      summary: API for get a comment list
+      description: For many of useful api
+      parameters:
+        - in: header
+          name: kind
+          description: divide api into many service
+          required: true
+          type: integer
+        - in: header
+          name: sourceID
+          description: which kinds of sources
+          required: true
+          type: integer
+      responses:
+        200:
+          description: get comment list successfully
+          schema:
+            items:
+              required:
+                - poster
+                - content
+              properties:
+                poster:
+                  type: string
+                content:
+                  type: string

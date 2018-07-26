@@ -1,0 +1,85 @@
+swagger: "2.0"
+
+info:
+  version: 1.0.0
+  title: Message
+  description: The Message Service Of Work-Muxixyz
+
+schemes:
+  - https
+host: work.muxixyz.com
+basePath: /message
+
+paths:
+  /new:
+    post:
+      summary: Make a new message to user.
+      description: KIND[1]process[2]file[3]comments[4]team. Create a events and send it to the exchange, and queue
+      parameters:
+        - name: POSTdata
+          in: body
+          description: data to make a message
+          schema:
+            required:
+              - receiver
+              - maker
+              - action
+              - kind
+              - sourceID
+            properties:
+              receiver:
+                type: string
+              maker:
+                type: string
+              action:
+                type: string
+              kind:
+                type: integer
+              sourceID:
+                type: integer
+      responses:
+        200:
+          description: message add successfully
+  /messageList:
+    get:
+      summary: API for getting a list of massages
+      description: Get a list of message by two ways.
+      parameters:
+        - in: header
+          name: token
+          description: verify the user and get the userID
+          required: true
+          type: string
+        - in: header
+          name: kind
+          description: KIND[1]hover[0]click
+          required: true
+          type: string
+      responses:
+        200:
+          description: message list
+          schema:
+            type: array
+            items:
+              required:
+                - sourceID
+                - fromName
+                - fromAvatar
+                - time
+                - sourceKind
+                - readed
+              properties:
+                sourceID:
+                  type: integer
+                fromName:
+                  type: string
+                fromAvatar:
+                  type: string
+                time:
+                  type: string
+                sourceKind:
+                  type: integer
+                readed:
+                  type: boolean
+                
+      

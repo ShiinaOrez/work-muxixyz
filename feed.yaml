@@ -1,0 +1,78 @@
+swagger: "2.0"
+
+info:
+  version: 1.0.0
+  title: Feed
+  description: The Feed Service Of Work-Muxixyz
+
+schemes:
+  - https
+host: work.muxixyz.com
+basePath: /feed
+
+paths:
+  /add:
+    post:
+      summary: Add the events in the exchange
+      description: KIND[1]process[2]file[3]comments[4]team. Create a events and send it to the exchange, and queue
+      parameters:
+        - name: POSTdata
+          in: body
+          description: data to create a event
+          schema:
+            required:
+              - action
+              - kind
+              - sourceID
+            properties:
+              from:
+                type: string
+              action:
+                type: string
+              kind:
+                type: integer
+              sourceID:
+                type: integer
+      responses:
+        200:
+          description: feed add successfully
+  /feedList:
+    get:
+      summary: API for getting a list of feeds
+      description: Use mq's receive service to get feed from different queue.
+      parameters:
+        - in: header
+          name: token
+          description: verify the user and get the userID
+          required: true
+          type: string
+        - in: header
+          name: page
+          description: page to get
+          required: true
+          type: string
+      responses:
+        200:
+          description: feed list
+          schema:
+            type: array
+            items:
+              required:
+                - creator
+                - time
+                - action
+                - kind
+                - sourceID
+              properties:
+                creator:
+                  type: string
+                time:
+                  type: string
+                action:
+                  type: string
+                kind:
+                  type: integer
+                sourceID:
+                  type: integer
+                
+      
