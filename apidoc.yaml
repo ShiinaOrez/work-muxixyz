@@ -1,0 +1,1027 @@
+swagger: '2.0'
+
+### information start ###
+info:
+  description: work.muxixyz.com API
+  version: 1.0.0
+  title: Work API
+  contact:
+    email: shiina_orez@qq.com
+  #license
+### information end ###
+
+host: work.muxixyz.com
+basePath: /api/v1.0
+schemes:
+  - https
+  - http
+
+### tag start ###
+
+tags:
+  - name: auth
+    description: 身份验证服务
+
+  - name: feed
+    description: feed流服务
+
+  - name: assist
+    description: 辅助功能
+
+  - name: project
+    description: 项目服务
+
+### tag end ###
+
+### path start ###
+
+paths:
+  /auth/signup/:
+    post:
+      tags:
+        - auth
+      summary: Signup a account.
+      description: Just save a list of user.
+      produces:
+        - application/json
+      parameters:
+        - name: POSTdata
+          in: body
+          description: data to fill the segments
+          schema:
+            required:
+              - name
+              - email
+            properties:
+              name:
+                type: string
+              email:
+                type: string
+              avatar:
+                type: string
+              tel:
+                type: string
+              teamID:
+                type: integer
+      responses:
+        200:
+          description: Signup successfully
+        401:
+          description: User already exist
+  /auth/login/:
+    post:
+      tags:
+        - auth
+      summary: Login a account
+      description: Get a token formed by user-info
+      produces:
+        - application/json
+      parameters:
+        - name: POSTdata
+          in: body
+          description: data to mark who want a token
+          schema:
+            required:
+              - username
+            properties:
+              username:
+                type: string
+      responses:
+        200:
+          description: Return a token
+          schema:
+            required:
+              - token
+            properties:
+              token:
+                type: string
+  /auth/token/:
+    post:
+      tags:
+        - auth
+      summary: API for get token
+      description: Use muxi method to make a token
+      produces:
+        - application/json
+      parameters:
+        - name: MetaData
+          in: body
+          description: data to make a token
+          schema:
+            required:
+              - username
+              - ddl
+            properties:
+              username:
+                type: string
+              ddl:
+                type: string
+      responses:
+        200:
+          description: Return a token
+          schema:
+            required:
+              - token
+            properties:
+              token:
+                type: string
+  /auth/verify/:
+     post:
+      tags:
+        - auth
+      summary: API for verify the token
+      description: verify token out of ddl
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: token
+          description: token to verify
+          required: true
+          type: string
+#        - name: MetaData
+#          in: body
+#          description: username
+#          schema:
+#            required:
+#              - username
+#            properties:
+#              username:
+#                type: string
+      responses:
+        200:
+          description: OK
+        401:
+          description: FAIL
+  /auth/group/new/:
+    post:
+      tags:
+        - auth
+      summary: post a new group
+      description: a groupName and a user list
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: token
+          description: token
+          required: true
+          type: string
+        - name: POSTdata
+          in: body
+          description: data to set a enw group
+          schema:
+            required:
+              - groupName
+              - userList
+            properties:
+              groupName:
+                type: string
+              userlist:
+                type: array
+                items:
+                  required:
+                    - userID
+                  properties:
+                    userID:
+                      type: integer
+      responses:
+        200:
+          description: OK
+        401:
+          description: verify failed
+  /auth/group/{gid}/userlist/:
+    get:
+      tags:
+        - auth
+      summary: group user list
+      description: get a user list by group id 
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: gid
+          description: groupID
+          required: true
+          type: integer
+        - in: header
+          name: token
+          description: who want user list
+          required: true
+          type: string
+      responses:
+        200:
+          description: user list
+          schema:
+            type: array
+            items:
+              required:
+                - username
+                - userID
+                - groupName
+                - role
+                - email
+              properties:
+                username:
+                  type: string
+                userID:
+                  type: integer
+                groupName:
+                  type: string
+                role:
+                  type: integer
+                email:
+                  type: string
+  /auth/group/list/:
+    get:
+      tags:
+        - auth
+      summary: get a group list
+      description: verify token and get a list
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              required:
+                - groupID
+                - groupName
+                - userCount
+              properties:
+                groupID:
+                  type: integer
+                groupName:
+                  type: string
+                userCount:
+                  type: integer
+  /auth/project/{pid}/userlist/:
+    get:
+      tags:
+        - auth
+      summary: get project user list
+      description: get a list of user by projectID
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: pid
+          description: projectID
+          required: true
+          type: integer
+        - in: header
+          name: token
+          description: who want user list
+          required: true
+          type: string
+      responses:
+        200:
+          description: user list
+          schema:
+            type: array
+            items:
+              required:
+                - username
+                - userID
+                - avatar
+              properties:
+                username:
+                  type: string
+                userID:
+                  type: integer
+                avatar:
+                  type: string     
+  /user/{uid}/project/list/:
+    get:
+      tags:
+        - auth
+      summary: get a project list
+      description: verify token and get a list,uid==0 is all project list
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: uid
+          description: userID
+          required: true
+          type: integer
+        - in: header
+          name: token
+          description: token,if uid==0 token is not required
+          required: false
+          type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              required:
+                - projectID
+                - projectName
+                - userCount
+              properties:
+                projectID:
+                  type: integer
+                projectName:
+                  type: string
+                userCount:
+                  type: integer
+  /auth/2bMember/:
+    post:
+      tags:
+        - auth
+      summary: accept a new member
+      description: receive a user ID
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: token
+          description: token
+          required: true
+          type: string
+        - name: POSTdata
+          in: body
+          description: userID
+          schema:
+            required:
+              - userID
+            properties:
+              userID:
+                type: integer
+      responses:
+        200:
+          description: OK
+        401:
+          description: verify failed
+  /auth/addAdmin/:
+    post:
+      tags:
+        - auth
+      summary: super user add someone on admin list
+      description: verify token and add a FK
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: token
+          description: token to verify
+          required: true
+          type: string
+        - name: POSTdata
+          in: body
+          description: who are the lucky dog
+          schema:
+            required:
+              - superuser
+              - luckydog
+            properties:
+              superuser:
+                type: string
+              luckydog:
+                type: string
+      responses:
+        200:
+          description: luckydog be a admin
+        407:
+          description: ddl
+        408:
+          description: auth fail
+  /user/{uid}/manage-pro/:
+    post:
+      tags:
+        - auth
+      summary: project management
+      description: get a list of project,and change user's project list
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: uid
+          description: user ID 
+          required: true
+          type: integer
+        - in: header
+          name: token
+          description: token
+          required: true
+          type: string
+        - name: POSTdata
+          in: body
+          description: data to change projects
+          schema:
+            required:
+              - projectList
+            properties:
+              projectList:
+                type: array
+                items:
+                  required:
+                    - projectID
+                  properties:
+                    projectID:
+                      type: integer
+      responses:
+        200:
+          description: change it successfully
+        401:
+          description: verify failed  
+  /user/{uid}/manage-group/:
+    post:
+      tags:
+        - auth
+      summary: superuser change member's group
+      description: just receive a groupID  
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: uid
+          description: user ID
+          required: true
+          type: integer
+        - in: header
+          name: token
+          description: token
+          required: true
+          type: string
+        - name: POSTdata
+          in: body
+          description: groupID
+          schema:
+            required:
+              - groupID
+            properties:
+              groupID:
+                type: integer
+      responses:
+        200:
+          description: OK
+        401:
+          description: verify failed
+  /user/{uid}/set-role/:
+    post:
+      tags:
+        - auth
+      summary: superuser set user's role
+      description: receive a number and change it
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: uid
+          description: user ID
+          required: true
+          type: integer
+        - in: header
+          name: token
+          description: token
+          required: true
+          type: string
+        - name: POSTdata
+          in: body
+          description: role
+          schema:
+            required:
+              - role
+            properties:
+              role:
+                type: integer
+      responses:
+        200:
+          description: OK
+        401:
+          description: verify failed
+  /user/{uid}/setting/:
+    post:
+      tags:
+        - auth
+      summary: user's setting
+      description: setting about message and email service
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: uid 
+          description: user ID
+          required: true
+          type: integer
+        - in: header
+          name: token
+          description: token
+          required: true
+          type: integer
+        - name: POSTdata
+          in: body
+          description: message and email
+          schema:
+            required:
+              - username
+              - address
+              - tel
+              - message
+              - email
+            properties:
+              username:
+                type: string
+              address:
+                type: string
+              tel:
+                type: string
+              message:
+                type: boolean
+              email:
+                type: boolean
+      responses:
+        200:
+          description: OK
+        401:
+          description: verify failed
+  /feed/new/:
+    post:
+      tags:
+        - feed
+      summary: Add the events in the exchange
+      description: KIND[1]process[2]file[3]comments[4]team. Create a events and send it to the exchange, and queue
+      produces:
+        - application/json
+      parameters:
+        - name: POSTdata
+          in: body
+          description: data to create a event
+          schema:
+            required:
+              - action
+              - kind
+              - sourceID
+            properties:
+              from:
+                type: string
+              action:
+                type: string
+              kind:
+                type: integer
+              sourceID:
+                type: integer
+      responses:
+        200:
+          description: feed add successfully
+  /feed/list/:
+    get:
+      tags:
+        - feed
+      summary: API for getting a list of feeds
+      description: Use mq's receive service to get feed from different queue.
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: token
+          description: verify the user and get the userID
+          required: true
+          type: string
+        - in: header
+          name: page
+          description: page to get
+          required: true
+          type: string
+      responses:
+        200:
+          description: feed list
+          schema:
+            type: array
+            items:
+              required:
+                - creator
+                - time
+                - action
+                - kind
+                - sourceID
+              properties:
+                creator:
+                  type: string
+                time:
+                  type: string
+                action:
+                  type: string
+                kind:
+                  type: integer
+                sourceID:
+                  type: integer
+
+  /comment/new/:
+     post:
+        tags:
+        - assist
+        summary: post a new comment
+        description: post all kinds of comment
+        produces:
+          - application/json
+        parameters:
+          - name: POSTdata
+            in: body
+            schema:
+              required:
+                - username
+                - kind
+                - content
+                - sourceID
+              properties:
+                username:
+                  type: string
+                kind:
+                  type: integer
+                content:
+                  type: string
+                sourceID:
+                  type: integer
+        responses:
+          200:
+            description: comment successfully
+  /comment/list/:
+    get:
+      tags:
+      - assist
+      summary: API for get a comment list
+      description: For many of useful api
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: kind
+          description: divide api into many service
+          required: true
+          type: integer
+        - in: header
+          name: sourceID
+          description: which kinds of sources
+          required: true
+          type: integer
+      responses:
+        200:
+          description: get comment list successfully
+          schema:
+            items:
+              required:
+                - poster
+                - content
+              properties:
+                poster:
+                  type: string
+                content:
+                  type: string
+  /message/new/:
+    post:
+      tags:
+        - assist
+      summary: Make a new message to user.
+      description: KIND[1]process[2]file[3]comments[4]team. Create a events and send it to the exchange, and queue
+      produces:
+        - application/json
+      parameters:
+        - name: POSTdata
+          in: body
+          description: data to make a message
+          schema:
+            required:
+              - receiver
+              - maker
+              - action
+              - kind
+              - sourceID
+            properties:
+              receiver:
+                type: string
+              maker:
+                type: string
+              action:
+                type: string
+              kind:
+                type: integer
+              sourceID:
+                type: integer
+      responses:
+        200:
+          description: message add successfully
+  /message/list/:
+    get:
+      tags:
+        - assist
+      summary: API for getting a list of massages
+      description: Get a list of message by two ways.
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: token
+          description: verify the user and get the userID
+          required: true
+          type: string
+        - in: header
+          name: kind
+          description: KIND[1]hover[0]click
+          required: true
+          type: string
+      responses:
+        200:
+          description: message list
+          schema:
+            type: array
+            items:
+              required:
+                - sourceID
+                - fromName
+                - fromAvatar
+                - time
+                - sourceKind
+                - readed
+              properties:
+                sourceID:
+                  type: integer
+                fromName:
+                  type: string
+                fromAvatar:
+                  type: string
+                time:
+                  type: string
+                sourceKind:
+                  type: integer
+                readed:
+                  type: boolean
+  /message/readall/:
+    post:
+      tags:
+        - assist
+      summary: click to read all messages
+      description: verify and change all unreaded message
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: token
+          description: token to verify
+          required: true
+          type: string
+        - name: POSTdata
+          in: body
+          description: username
+          schema:
+            required:
+              - username
+            properties:
+              username:
+                type: string
+      responses:
+        200:
+          description: OK
+        401:
+          description: verify failed
+  /message/{username}/{mid}/:
+    get:
+      tags:
+        - assist
+      summary: message information
+      description: verify token and find id
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: mid
+          description: messageID
+          required: true
+          type: integer
+        - in: path
+          name: username
+          description: user's name to find user and verify
+          required: true
+          type: string
+        - in: header
+          name: token
+          description: token for verify
+          required: true
+          type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            required:
+              - msgID
+              - fromName
+              - time
+              - action
+              - sourceKind
+              - sourceID
+            properties:
+              msgID:
+                type: integer
+              fromName:
+                type: string
+              time:
+                type: string
+              action:
+                type: string
+              sourceKind:
+                type: integer
+              sourceID:
+                type: integer
+        401:
+          description: verify failed
+        402:
+          description: user isn't exist
+        403:
+          description: message isn't exist
+  /project/new/:
+    post:
+      tags:
+        - project
+      summary: build a new project
+      description: admin can build a project by this API
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: token
+          description: token to verify admin
+          required: true
+          type: string
+        - name: POSTdata
+          in: body
+          description: required information to post a new project
+          schema:
+            required:
+              - username
+              - projectname
+              - userlist
+            properties:
+              username:
+                type: string
+              projectname:
+                type: string
+              userlist:
+                type: array
+                items:
+                  required:
+                    - userID
+                    - userName
+                  properties:
+                    userID:
+                      type: integer
+                    userName:
+                      type: string
+              intro:
+                type: string
+      responses:
+        200:
+          description: OK
+        401:
+          description: verify failed
+        403:
+          description: insufficient permissions
+  /project/{pid}/join/:
+    post:
+      tags:
+        - project
+      summary: pull someone in this project
+      description: get a user list and add it into project
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: token
+          description: verify user
+          required: true
+          type: string
+        - in: path
+          name: pid
+          description: projectID
+          required: true
+          type: integer
+        - name: POSTdata
+          in: body
+          description: data to verify and get user list
+          schema:
+            required:
+              - userlist
+              - adminname
+            properties:
+              userlist:
+                type: array
+                items:
+                  required:
+                    - userID
+                  properties:
+                    userID:
+                      type: integer
+              username:
+                type: string
+      responses:
+        200:
+          description: email have been send
+  /project/{pid}/member/change/:
+    post:
+      tags:
+        - project
+      summary: change the list of project members
+      description: get groupID and list ,and change it
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: pid
+          description: projectID
+          required: true
+          type: integer
+        - name: POSTdata
+          in: body
+          description: userlist&group
+          schema:
+            required:
+              - groupID
+              - userList
+            properties:
+              groupID:
+                type: integer
+              userList:
+                type: array
+                items:
+                  required:
+                    - userID
+                  properties:
+                    userID:
+                      type: integer
+      responses:
+        200:
+          description: change it successfully
+        401:
+          description: verify failed     
+  /project/{pid}/edit/:
+    post:
+      tags:
+        - project
+      summary: edit introduction & name
+      description: change introduction & name
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: token
+          description: verify admin
+          required: true
+          type: string
+        - in: path
+          name: pid
+          description: projectID
+          required: true
+          type: integer
+        - name: POSTdata
+          in: body
+          description: change including
+          schema:
+            required:
+              - intro
+              - name
+            properties:
+              intro:
+                type: string
+              name:
+                type: string
+      responses:
+        200:
+          description: edit successfully
+        401:
+          description: verify failed
+        403:
+          description: insufficient permissions
+  /project/{pid}/get-info/:
+    get:
+      tags:
+        - project
+      summary: get the name & including of introduction
+      description: return a string
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: pid
+          description: projectID
+          required: true
+          type: integer
+      responses:
+        200:
+          description: OK
+          schema:
+            required:
+              - intro
+              - name
+              - userCount
+            properties:
+              intro:
+                type: string
+              name:
+                type: string 
+              userCount:
+                type: integer 
+                
