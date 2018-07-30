@@ -833,6 +833,147 @@ paths:
           description: user isn't exist
         403:
           description: message isn't exist
+  /status/new/:
+    post:
+      tags:
+        - assist
+      summary: post a statu
+      description: receive including and title 
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: token
+          description: verify who post a statu
+          required: true
+          type: string
+        - name: POSTdata
+          in: body
+          description: content and title
+          schema:
+            required:
+              - content
+              - title
+            properties:
+              content:
+                type: string
+              title:
+                type: string
+      responses:
+        200:
+          description: OK
+        401:
+          description: verify failed
+  /status/{sid}/info/:
+    get:
+      tags:
+        - assist
+      summary: get information of statu
+      description: content title time like and user
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: sid
+          description: statu ID
+          required: true
+          type: integer
+      responses:
+        200:
+          description: OK
+          schema:
+            required:
+              - title
+              - content
+              - time
+              - likeCount
+              - commentCount
+              - userID
+              - username
+              - commentList
+            properties:
+              title:
+                type: string
+              content:
+                type: string
+              time:
+                type: string
+              likeCount:
+                type: integer
+              commentCount:
+                type: integer
+              userID:
+                type: integer
+              username:
+                type: string
+              commentList:
+                type: array
+                items:
+                  required:
+                    - username
+                    - avatar
+                    - time
+                    - content
+                  properties:
+                    username:
+                      type: string
+                    avatar:
+                      type: string
+                    time:
+                      type: string
+                    content:
+                      type: string
+  /status/list/:
+    get:
+      tags:
+        - assist
+      summary: get a list of status
+      description: one page have 20 status
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: token
+          description: token to know who want a list
+          required: true
+          type: string
+        - in: header
+          name: page
+          description: page number
+          required: true
+          type: integer
+      responses:
+        200:
+          description: OK
+          schema:
+            required:
+              - statuList
+            properties:
+              statuList:
+                type: array
+                items:
+                  required:
+                    - username
+                    - time
+                    - avatar
+                    - content
+                    - likeCount
+                    - commentCount
+                  properties:
+                    username:
+                      type: string
+                    time:
+                      type: string
+                    avatar:
+                      type: string
+                    content:
+                      type: string
+                    likeCount:
+                      type: integer
+                    commentCount:
+                      type: integer
+        401:
+          description: verify failed
   /project/new/:
     post:
       tags:
@@ -1024,4 +1165,27 @@ paths:
                 type: string 
               userCount:
                 type: integer 
-                
+  /project/{pid}/delete/:
+    delete:
+      tags:
+        - project
+      summary: delete a project
+      description: receive a projectID,and delete it
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: pid
+          description: projectID
+          required: true
+          type: integer
+        - in: header
+          name: token
+          description: token
+          required: true
+          type: string
+      responses:
+        200:
+          description: OK
+        401:
+          description: verify failed
