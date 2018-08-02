@@ -22,16 +22,38 @@ tags:
   - name: auth
     description: 身份验证服务
 
+  - name: management
+    description: 成员管理服务
+
   - name: feed
     description: feed流服务
 
-  - name: assist
-    description: 辅助功能
+  - name: message
+    description: 消息服务
 
   - name: project
     description: 项目服务
 
+  - name: status
+    description: 进度服务
+
 ### tag end ###
+
+### auth start ###
+
+securityDefinitions:
+
+  basic:
+    type: basic
+    description: http basic auth,即在请求头中添加Authorization字段，内容为base64.encode(“邮箱:muxi304”)
+
+  token:
+    type: apiKey
+    description: token,然后在请求头中添加Authorization字段，内容为base64.encode(“token:”)
+    name: token
+    in: header
+
+### auth end ###
 
 ### path start ###
 
@@ -42,6 +64,8 @@ paths:
         - auth
       summary: Signup a account.
       description: Just save a list of user.
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
@@ -74,6 +98,8 @@ paths:
         - auth
       summary: Login a account
       description: Get a token formed by user-info
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
@@ -95,78 +121,42 @@ paths:
             properties:
               token:
                 type: string
-  /auth/token/:
-    post:
-      tags:
-        - auth
-      summary: API for get token
-      description: Use muxi method to make a token
-      produces:
-        - application/json
-      parameters:
-        - name: MetaData
-          in: body
-          description: data to make a token
-          schema:
-            required:
-              - username
-              - ddl
-            properties:
-              username:
-                type: string
-              ddl:
-                type: string
-      responses:
-        200:
-          description: Return a token
-          schema:
-            required:
-              - token
-            properties:
-              token:
-                type: string
   /auth/verify/:
      post:
       tags:
         - auth
       summary: API for verify the token
       description: verify token out of ddl
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
-        - in: header
-          name: token
-          description: token to verify
-          required: true
-          type: string
-#        - name: MetaData
-#          in: body
-#          description: username
-#          schema:
-#            required:
-#              - username
-#            properties:
-#              username:
-#                type: string
+        - name: MetaData
+          in: body
+          description: token
+          schema:
+            required:
+              - token
+            properties:
+              token:
+                type: string
       responses:
         200:
           description: OK
         401:
           description: FAIL
-  /auth/group/new/:
+  /group/new/:
     post:
       tags:
-        - auth
+        - management
       summary: post a new group
       description: a groupName and a user list
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
-        - in: header
-          name: token
-          description: token
-          required: true
-          type: string
         - name: POSTdata
           in: body
           description: data to set a enw group
@@ -190,10 +180,12 @@ paths:
           description: OK
         401:
           description: verify failed
-  /auth/group/{gid}/userlist/:
+      security:
+      - token: []
+  /group/{gid}/userList/:
     get:
       tags:
-        - auth
+        - management
       summary: group user list
       description: get a user list by group id 
       produces:
@@ -204,14 +196,18 @@ paths:
           description: groupID
           required: true
           type: integer
-        - in: header
-          name: token
-          description: who want user list
+        - in: path
+          name: page
+          description: default=1
           required: true
-          type: string
+          type: integer
       responses:
         200:
           description: user list
+          headers:
+            links:
+              type: string
+              description: next page & last page url
           schema:
             type: array
             items:
@@ -232,10 +228,12 @@ paths:
                   type: integer
                 email:
                   type: string
-  /auth/group/list/:
+      security:
+      - token: []
+  /group/list/:
     get:
       tags:
-        - auth
+        - management
       summary: get a group list
       description: verify token and get a list
       produces:
@@ -257,10 +255,12 @@ paths:
                   type: string
                 userCount:
                   type: integer
-  /auth/project/{pid}/userlist/:
+      security:
+      - token: []            
+  /project/{pid}/userList/:
     get:
       tags:
-        - auth
+        - management
       summary: get project user list
       description: get a list of user by projectID
       produces:
@@ -271,11 +271,6 @@ paths:
           description: projectID
           required: true
           type: integer
-        - in: header
-          name: token
-          description: who want user list
-          required: true
-          type: string
       responses:
         200:
           description: user list
@@ -292,11 +287,13 @@ paths:
                 userID:
                   type: integer
                 avatar:
-                  type: string     
+                  type: string 
+      security:
+      - token: []    
   /user/{uid}/project/list/:
     get:
       tags:
-        - auth
+        - management
       summary: get a project list
       description: verify token and get a list,uid==0 is all project list
       produces:
@@ -307,11 +304,6 @@ paths:
           description: userID
           required: true
           type: integer
-        - in: header
-          name: token
-          description: token,if uid==0 token is not required
-          required: false
-          type: string
       responses:
         200:
           description: OK
@@ -329,20 +321,19 @@ paths:
                   type: string
                 userCount:
                   type: integer
-  /auth/2bMember/:
+      security:
+      - token: []
+  /user/2bMember/:
     post:
       tags:
-        - auth
+        - management
       summary: accept a new member
       description: receive a user ID
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
-        - in: header
-          name: token
-          description: token
-          required: true
-          type: string
         - name: POSTdata
           in: body
           description: userID
@@ -357,20 +348,19 @@ paths:
           description: OK
         401:
           description: verify failed
-  /auth/addAdmin/:
+      security:
+      - token: []
+  /user/addAdmin/:
     post:
       tags:
-        - auth
+        - management
       summary: super user add someone on admin list
       description: verify token and add a FK
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
-        - in: header
-          name: token
-          description: token to verify
-          required: true
-          type: string
         - name: POSTdata
           in: body
           description: who are the lucky dog
@@ -390,12 +380,16 @@ paths:
           description: ddl
         408:
           description: auth fail
-  /user/{uid}/manage-pro/:
+      security:
+      - token: []
+  /user/{uid}/managePro/:
     post:
       tags:
-        - auth
+        - management
       summary: project management
       description: get a list of project,and change user's project list
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
@@ -404,11 +398,6 @@ paths:
           description: user ID 
           required: true
           type: integer
-        - in: header
-          name: token
-          description: token
-          required: true
-          type: string
         - name: POSTdata
           in: body
           description: data to change projects
@@ -428,13 +417,17 @@ paths:
         200:
           description: change it successfully
         401:
-          description: verify failed  
-  /user/{uid}/manage-group/:
+          description: verify failed
+      security:
+      - token: []  
+  /user/{uid}/manageGroup/:
     post:
       tags:
-        - auth
+        - management
       summary: superuser change member's group
       description: just receive a groupID  
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
@@ -443,11 +436,6 @@ paths:
           description: user ID
           required: true
           type: integer
-        - in: header
-          name: token
-          description: token
-          required: true
-          type: string
         - name: POSTdata
           in: body
           description: groupID
@@ -462,12 +450,16 @@ paths:
           description: OK
         401:
           description: verify failed
-  /user/{uid}/set-role/:
+      security:
+      - token: []
+  /user/{uid}/setRole/:
     post:
       tags:
-        - auth
+        - management
       summary: superuser set user's role
       description: receive a number and change it
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
@@ -476,11 +468,6 @@ paths:
           description: user ID
           required: true
           type: integer
-        - in: header
-          name: token
-          description: token
-          required: true
-          type: string
         - name: POSTdata
           in: body
           description: role
@@ -495,23 +482,22 @@ paths:
           description: OK
         401:
           description: verify failed
+      security:
+      - token: []
   /user/{uid}/setting/:
     post:
       tags:
-        - auth
+        - management
       summary: user's setting
       description: setting about message and email service
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
         - in: path
           name: uid 
           description: user ID
-          required: true
-          type: integer
-        - in: header
-          name: token
-          description: token
           required: true
           type: integer
         - name: POSTdata
@@ -540,12 +526,16 @@ paths:
           description: OK
         401:
           description: verify failed
+      security:
+      - token: []
   /feed/new/:
     post:
       tags:
         - feed
       summary: Add the events in the exchange
       description: KIND[1]process[2]file[3]comments[4]team. Create a events and send it to the exchange, and queue
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
@@ -569,6 +559,8 @@ paths:
       responses:
         200:
           description: feed add successfully
+      security:
+      - token: []
   /feed/list/:
     get:
       tags:
@@ -578,12 +570,7 @@ paths:
       produces:
         - application/json
       parameters:
-        - in: header
-          name: token
-          description: verify the user and get the userID
-          required: true
-          type: string
-        - in: header
+        - in: path
           name: page
           description: page to get
           required: true
@@ -591,6 +578,10 @@ paths:
       responses:
         200:
           description: feed list
+          headers:
+            links:
+              type: string
+              description: next page & last page url
           schema:
             type: array
             items:
@@ -611,74 +602,183 @@ paths:
                   type: integer
                 sourceID:
                   type: integer
-
-  /comment/new/:
-     post:
-        tags:
-        - assist
-        summary: post a new comment
-        description: post all kinds of comment
-        produces:
-          - application/json
-        parameters:
-          - name: POSTdata
-            in: body
-            schema:
-              required:
-                - username
-                - kind
-                - content
-                - sourceID
-              properties:
-                username:
-                  type: string
-                kind:
-                  type: integer
-                content:
-                  type: string
-                sourceID:
-                  type: integer
-        responses:
-          200:
-            description: comment successfully
-  /comment/list/:
+      security:
+      - token: []
+  /project/{pid}/file/{fid}/comment/{cid}/:
     get:
       tags:
-      - assist
-      summary: API for get a comment list
-      description: For many of useful api
+        - project
+      summary: get information of a comment by id
+      description: get username,avatar,time,including
       produces:
         - application/json
       parameters:
-        - in: header
-          name: kind
-          description: divide api into many service
+        - in: path
+          name: cid
+          description: comment id
           required: true
           type: integer
-        - in: header
-          name: sourceID
-          description: which kinds of sources
+        - in: path
+          name: pid
+          description: project ID
+          required: true
+          type: integer
+        - in: path
+          name: fid
+          description: file ID
           required: true
           type: integer
       responses:
         200:
-          description: get comment list successfully
+          description: OK
           schema:
-            items:
-              required:
-                - poster
-                - content
-              properties:
-                poster:
-                  type: string
-                content:
-                  type: string
+            required:
+              - username
+              - avatar
+              - time
+              - content
+        401:
+          description: verify failed
+        402:
+          description: can't find comment
+      security:
+      - token: []
+    delete:
+      tags:
+        - project
+      summary: delete a comment by id
+      description: admin
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: cid
+          description: comment id
+          required: true
+          type: integer
+        - in: path
+          name: pid
+          description: project ID
+          required: true
+          type: integer
+        - in: path
+          name: fid
+          description: file ID
+          required: true
+          type: integer
+      responses:
+        200:
+          description: OK
+        401:
+          description: verify failed
+        402:
+          description: can't find
+      security:
+      - token: []
+  /project/{pid}/file/{fid}/comments/:
+    get:
+      tags:
+        - project
+      summary: get a list of comment
+      description: get
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: pid
+          description: project ID
+          required: true
+          type: integer
+        - in: path
+          name: fid
+          description: file ID
+          required: true
+          type: integer
+        - in: path
+          name: page
+          description: default=1
+          required: true
+          type: integer
+      responses:
+        200:
+          description: OK
+          headers:
+            links:
+              type: string
+              description: next page & last page url
+          schema:
+            required:
+              - commentList
+            properties:
+              commentList:
+                type: array
+                items:
+                  required:
+                    - username
+                    - avatar
+                    - time
+                    - content
+                  properties:
+                    username:
+                      type: string
+                    avatar:
+                      type: string
+                    time:
+                      type: string
+                    content:
+                      type: string
+        401:
+          description: verify failed
+        402:
+          description: project or file not found
+      security:
+      - token: []
+    post:
+      tags:
+        - project
+      summary: comment a file or doc
+      description: verify and post 
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: pid
+          description: project ID
+          required: true
+          type: integer
+        - in: path
+          name: fid
+          description: file or doc ID
+          required: true
+          type: integer
+        - name: POSTdata
+          in: body
+          description: post a new comment
+          schema:
+            required:
+              - content
+            properties:
+              content:
+                type: string
+      responses:
+        200:
+          description: OK
+        401:
+          description: verify failed
+        402:
+          description: project or file not found       
+      security:
+      - token: []
   /message/new/:
     post:
       tags:
-        - assist
+        - message
       summary: Make a new message to user.
       description: KIND[1]process[2]file[3]comments[4]team. Create a events and send it to the exchange, and queue
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
@@ -706,28 +806,34 @@ paths:
       responses:
         200:
           description: message add successfully
+      security:
+      - token: []
   /message/list/:
     get:
       tags:
-        - assist
+        - message
       summary: API for getting a list of massages
       description: Get a list of message by two ways.
       produces:
         - application/json
       parameters:
         - in: header
-          name: token
-          description: verify the user and get the userID
-          required: true
-          type: string
-        - in: header
           name: kind
           description: KIND[1]hover[0]click
           required: true
           type: string
+        - in: path
+          name: page
+          description: default=1
+          required: true
+          type: integer
       responses:
         200:
           description: message list
+          headers:
+            links:
+              type: string
+              description: next page & last page url
           schema:
             type: array
             items:
@@ -751,20 +857,24 @@ paths:
                   type: integer
                 readed:
                   type: boolean
-  /message/readall/:
+      security:
+      - token: []
+  /message/readAll/:
     post:
       tags:
-        - assist
+        - message
       summary: click to read all messages
       description: verify and change all unreaded message
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
-        - in: header
-          name: token
-          description: token to verify
+        - in: path
+          name: page
+          description: default=1
           required: true
-          type: string
+          type: integer
         - name: POSTdata
           in: body
           description: username
@@ -777,12 +887,18 @@ paths:
       responses:
         200:
           description: OK
+          headers:
+            links:
+              type: string
+              description: next page & last page url
         401:
           description: verify failed
+      security:
+      - token: []
   /message/{username}/{mid}/:
     get:
       tags:
-        - assist
+        - message
       summary: message information
       description: verify token and find id
       produces:
@@ -796,11 +912,6 @@ paths:
         - in: path
           name: username
           description: user's name to find user and verify
-          required: true
-          type: string
-        - in: header
-          name: token
-          description: token for verify
           required: true
           type: string
       responses:
@@ -833,20 +944,19 @@ paths:
           description: user isn't exist
         403:
           description: message isn't exist
+      security:
+      - token: []
   /status/new/:
     post:
       tags:
-        - assist
+        - status
       summary: post a statu
       description: receive including and title 
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
-        - in: header
-          name: token
-          description: verify who post a statu
-          required: true
-          type: string
         - name: POSTdata
           in: body
           description: content and title
@@ -864,10 +974,12 @@ paths:
           description: OK
         401:
           description: verify failed
-  /status/{sid}/info/:
+      security:
+      - token: []
+  /status/{sid}/:
     get:
       tags:
-        - assist
+        - status
       summary: get information of statu
       description: content title time like and user
       produces:
@@ -923,21 +1035,38 @@ paths:
                       type: string
                     content:
                       type: string
+      security:
+      - token: []
+    delete:
+      tags:
+        - status
+      summary: delete a statu
+      description: delete
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: sid
+          description: status ID
+          required: true
+          type: integer
+      responses:
+        200:
+          description: OK
+        401:
+          description: verify failed
+      security:
+      - token: []
   /status/list/:
     get:
       tags:
-        - assist
+        - status
       summary: get a list of status
       description: one page have 20 status
       produces:
         - application/json
       parameters:
-        - in: header
-          name: token
-          description: token to know who want a list
-          required: true
-          type: string
-        - in: header
+        - in: path
           name: page
           description: page number
           required: true
@@ -945,6 +1074,10 @@ paths:
       responses:
         200:
           description: OK
+          headers:
+            links:
+              type: string
+              description: next page & last page url
           schema:
             required:
               - statuList
@@ -974,20 +1107,175 @@ paths:
                       type: integer
         401:
           description: verify failed
+      security:
+      - token: []
+  /status/{sid}/comment/{cid}/:
+    get:
+      tags:
+        - status
+      summary: get information of a comment by id
+      description: get username,avatar,time,including
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: cid
+          description: comment id
+          required: true
+          type: integer
+        - in: path
+          name: sid
+          description: statu ID
+          required: true
+          type: integer
+      responses:
+        200:
+          description: OK
+          schema:
+            required:
+              - username
+              - avatar
+              - time
+              - content
+            properties:
+              useranme:
+                type: string
+              avatar:
+                type: string
+              time:
+                type: string
+              content:
+                type: string
+        401:
+          description: verify failed
+        402:
+          description: can't find comment
+      security:
+      - token: []
+    delete:
+      tags:
+        - status
+      summary: delete a comment by id
+      description: admin
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: cid
+          description: comment id
+          required: true
+          type: integer
+        - in: path
+          name: sid
+          description: statu ID
+          required: true
+          type: integer
+      responses:
+        200:
+          description: OK
+        401:
+          description: verify failed
+        402:
+          description: can't find
+      security:
+      - token: []
+  /status/{sid}/comments/:
+    get:
+      tags:
+        - status
+      summary: get a list of statu
+      description: get
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: sid
+          description: statu ID
+          required: true
+          type: integer
+        - in: path
+          name: page
+          description: default=1
+          required: true
+          type: integer
+      responses:
+        200:
+          description: OK
+          headers:
+            links:
+              type: string
+              description: next page & last page url
+          schema:
+            required:
+              - commentList
+            properties:
+              commentList:
+                type: array
+                items:
+                  required:
+                    - username
+                    - avatar
+                    - time
+                    - content
+                  properties:
+                    username:
+                      type: string
+                    avatar:
+                      type: string
+                    time:
+                      type: string
+                    content:
+                      type: string
+        401:
+          description: verify failed
+        402:
+          description: statu not found
+      security:
+      - token: []
+    post:
+      tags:
+        - status
+      summary: comment a statu
+      description: verify and post 
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: sid
+          description: status ID
+          required: true
+          type: integer
+        - name: POSTdata
+          in: body
+          description: post a new comment
+          schema:
+            required:
+              - content
+            properties:
+              content:
+                type: string
+      responses:
+        200:
+          description: OK
+        401:
+          description: verify failed
+        402:
+          description: statu not found
+      security:
+      - token: []
   /project/new/:
     post:
       tags:
         - project
       summary: build a new project
       description: admin can build a project by this API
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
-        - in: header
-          name: token
-          description: token to verify admin
-          required: true
-          type: string
         - name: POSTdata
           in: body
           description: required information to post a new project
@@ -1021,20 +1309,55 @@ paths:
           description: verify failed
         403:
           description: insufficient permissions
-  /project/{pid}/join/:
+      security:
+      - token: []
+  /project/{pid}/member/:
+    get:
+      tags:
+        - project
+      summary: get a member list
+      description: get
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: pid
+          description: projectID
+          required: true
+          type: integer
+      responses:
+        200:
+          description: OK
+          schema:
+            required:
+              - memberList
+            properties:
+              memberList:
+                type: array
+                items:
+                  required:
+                    - userID
+                    - username
+                    - avatar
+                  properties:
+                    userID:
+                      type: integer
+                    username:
+                      type: string
+                    avatar:
+                      type: string
+      security:
+      - token: []
     post:
       tags:
         - project
       summary: pull someone in this project
       description: get a user list and add it into project
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
-        - in: header
-          name: token
-          description: verify user
-          required: true
-          type: string
         - in: path
           name: pid
           description: projectID
@@ -1061,12 +1384,15 @@ paths:
       responses:
         200:
           description: email have been send
-  /project/{pid}/member/change/:
-    post:
+      security:
+      - token: []
+    put:
       tags:
         - project
       summary: change the list of project members
       description: get groupID and list ,and change it
+      consumes:
+        - application/json
       produces:
         - application/json
       parameters:
@@ -1098,45 +1424,9 @@ paths:
           description: change it successfully
         401:
           description: verify failed     
-  /project/{pid}/edit/:
-    post:
-      tags:
-        - project
-      summary: edit introduction & name
-      description: change introduction & name
-      produces:
-        - application/json
-      parameters:
-        - in: header
-          name: token
-          description: verify admin
-          required: true
-          type: string
-        - in: path
-          name: pid
-          description: projectID
-          required: true
-          type: integer
-        - name: POSTdata
-          in: body
-          description: change including
-          schema:
-            required:
-              - intro
-              - name
-            properties:
-              intro:
-                type: string
-              name:
-                type: string
-      responses:
-        200:
-          description: edit successfully
-        401:
-          description: verify failed
-        403:
-          description: insufficient permissions
-  /project/{pid}/get-info/:
+      security:
+      - token: []
+  /project/{pid}/:
     get:
       tags:
         - project
@@ -1165,12 +1455,13 @@ paths:
                 type: string 
               userCount:
                 type: integer 
-  /project/{pid}/delete/:
+      security:
+      - token: []
     delete:
       tags:
         - project
       summary: delete a project
-      description: receive a projectID,and delete it
+      description: only superuser
       produces:
         - application/json
       parameters:
@@ -1179,13 +1470,46 @@ paths:
           description: projectID
           required: true
           type: integer
-        - in: header
-          name: token
-          description: token
-          required: true
-          type: string
       responses:
         200:
           description: OK
         401:
           description: verify failed
+      security:
+      - token: []
+    post:
+      tags:
+        - project
+      summary: edit introduction & name
+      description: change introduction & name
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: pid
+          description: projectID
+          required: true
+          type: integer
+        - name: POSTdata
+          in: body
+          description: change including
+          schema:
+            required:
+              - intro
+              - name
+            properties:
+              intro:
+                type: string
+              name:
+                type: string
+      responses:
+        200:
+          description: edit successfully
+        401:
+          description: verify failed
+        403:
+          description: insufficient permissions
+      security:
+      - token: []
